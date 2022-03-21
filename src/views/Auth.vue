@@ -1,7 +1,7 @@
 <template>
   <div>
 	  <div class="min-h-screen bg-no-repeat bg-cover bg-center bg-[url('/src/assets/milad-fakurian-nY14Fs8pxT8-unsplash.jpg')]">
-    		<div class="flex justify-center">
+    	<div class="flex justify-center">
         		<div class="min-h-screen w-1/2 flex justify-center items-center">
     	 			<div >
 						<sign-up v-if="isSignUp" />

@@ -12,7 +12,12 @@ export const useTaskStore = defineStore("tasks", {
         .order("id", { ascending: false });
       this.tasks = tasks;
     },
+
     //crear tareas
+    async createTask() {
+      const taskItem = ref("");
+    },
+
     //borras tareas
     //editar tarees
   },

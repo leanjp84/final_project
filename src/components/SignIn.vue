@@ -30,7 +30,7 @@
               <div class="w-24 mx-auto">
                 <img
                   class="mx-auto"
-                  src="src/assets/logo-round.png"
+                  src="/src/assets/logo-round.png"
                   alt="logo"
                 />
               </div>
@@ -128,11 +128,13 @@ async function signIn() {
   try {
     await useUserStore().logIn(email.value, password.value);
     await router.push({ path: "/" });
+    alert("You've Signed In successfully");
   } catch (error) {
     errorMsg.value = `Error: ${error.message}`;
     setTimeout(() => {
       errorMsg.value = null;
     }, 7000);
+    alert("You've Signed In successfully");
   }
 }
 </script>

@@ -10,11 +10,13 @@
         repellat fugit soluta.
       </p>
     </div>
+    <NewTask />
   </div>
 </template>
 
 <script setup>
 import Nav from "../components/Nav.vue";
+import NewTask from "../components/NewTask.vue";
 </script>
 
 <style></style>

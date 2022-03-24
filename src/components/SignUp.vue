@@ -138,7 +138,7 @@ const confirmPassword = ref(null);
 const errorMsg = ref(null);
 
 // Register function withou using Pinia
-const register = async () => {
+/* const register = async () => {
   if (password.value === confirmPassword.value) {
     try {
       const { error } = await supabase.auth.signUp({
@@ -160,14 +160,14 @@ const register = async () => {
   setTimeout(() => {
     errorMsg.value = null;
   }, 5000);
-};
+}; */
 
 // register using Pinia
 const register2 = async () => {
   if (password.value === confirmPassword.value) {
     try {
       await useUserStore().signUp(email.value, password.value);
-      // alert("Please confirm your email to finishing register");
+      alert("Please confirm your email to finishing register");
       router.push({ path: "/auth" });
     } catch (error) {
       errorMsg.value = error.message;

@@ -2,23 +2,52 @@
 <div class="navbar bg-secondary text-white justify-between">
   <img class="w-12" src="src/assets/logo-white.png" alt="logo">
   <a class="btn btn-ghost normal-case text-xl">To do App</a>
-  <button @click="logout" class="btn btn-outline text-white">Log out</button>
+  <button @click.prevent="signOut" class="btn btn-outline text-white cursor-pointer">Log out</button>
 </div>
+
 </template>
 
 
-<script>
+
+<script setup> 
+
+import { ref, reactive, computed } from "vue";
 import { supabase } from "../supabase";
 import { useRouter } from "vue-router";
+import { useUserStore } from "../store/user";
+const router = useRouter();
 
-    // Log out function
-    async function logout () {
-      let { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      alert("See you next time");
-      router.push({ path: '/auth' });
-      return {logout, user};
-    }; 
+// get user from store
+const user = computed(() =>
+useUserStore().$state.user)
+
+// Logout function
+//   async function logout() {
+//   console.log('logging out')
+
+//   try {
+//     const { error, user } = await supabase.auth.signOut()
+
+//     if (error) {
+//       alert('Error signing out')
+//       console.error('Error', error)
+//       return 
+//     }
+//     router.push({path: "/auth"});
+
+//     alert('You have signed out!')
+//   } catch (err) {
+//     alert('Unknown error signing out')
+//     console.error('Error', err)
+//   }
+// }
+// logout function2
+async function signOut(){
+  await useUserStore().signOut();
+  router.push({path: "/auth"})
+}
+
+</script> 
+ 
 
 
-</script>

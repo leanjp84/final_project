@@ -102,7 +102,7 @@
                 Register
               </button>
               <p class="m-auto">
-                Already have an account
+                Already have an account?
                 <PersonalRouter
                   class="text-green-500"
                   :route="route"

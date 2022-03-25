@@ -1,5 +1,7 @@
 <template>
-  <div class="navbar bg-secondary text-white justify-between">
+  <div
+    class="navbar bg-gradient-to-r from-fuchsia-600 to-indigo-800 text-white justify-between"
+  >
     <img class="w-12" src="/src/assets/logo-white.png" alt="logo" />
     <a class="btn btn-ghost normal-case text-xl">To do App</a>
     <button

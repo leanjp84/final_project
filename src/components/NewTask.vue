@@ -9,17 +9,18 @@
     <form class="">
       <div class="mb-3 pt-0 flex flex-col gap-4 sm:flex-row">
         <input
+          v-model="newItem"
           name="todoTask"
           id="task"
           type="text"
-          placeholder="Type your task here"
+          placeholder="You gotta do what you gotta do"
           class="px-3 py-4 placeholder-blueGray-300 text-blueGray-600 relative bg-white rounded text-base border-0 shadow outline-none focus:outline-none focus:ring w-full"
         />
         <button
-          @click.prevent="createTask"
+          @click.prevent="newTask"
           class="px-4 w-64 placeholder:rounded bg-primary text-white font-bold p-4 rounded uppercase border-white hover:bg-secondary hover:drop-shadow-xl"
         >
-          Add task
+          add task
         </button>
       </div>
     </form>
@@ -27,33 +28,17 @@
 </template>
 
 <script setup>
-import { ref, reactive } from "vue";
-import { supabase } from "../supabase";
-import { useTaskStore } from "../store/task";
-import { useUserStore } from "../store/user";
+import { useUserStore } from "../store/user.js";
+import { useTaskStore } from "../store/task.js";
+import { ref } from "vue";
 
-const errorMsg = ref("");
+const task = useTaskStore();
+const user = useUserStore();
+const newItem = ref("");
 
-async function createTask() {
-  try {
-    const { error } = await supabase.from("tasks").insert([
-      {
-        title: task.value,
-        is_complete: false,
-      },
-    ]);
-    console.log(task.value);
-
-    if (error) throw error;
-    task.value = "New task added";
-    setTimeout(() => {
-      errorMsg.value = false;
-    }, 5000);
-  } catch (error) {
-    errorMsg.value = `Error: ${error.message}`;
-    setTimeout(() => {
-      errorMsg.value = false;
-    }, 5000);
-  }
-}
+const newTask = async () => {
+  task.createTask(newItem.value, user.user);
+  newItem.value = "";
+  // await doTask();
+};
 </script>

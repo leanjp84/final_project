@@ -62,8 +62,21 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { supabase } from "../supabase";
 import { useTaskStore } from "../store/task";
 import { useUserStore } from "../store/user";
+
+
+async function allData(){
+
+const { data, error } = await supabase
+  .from('tasks')
+  .select('id', 'title', 'is_completed','inserted_at',);
+  
+}
+
+
+
+
 </script>

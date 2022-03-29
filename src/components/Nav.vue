@@ -4,6 +4,7 @@
   >
     <img class="w-12" src="/src/assets/logo-white.png" alt="logo" />
     <a class="btn btn-ghost normal-case text-xl">To do App</a>
+
     <button
       @click.prevent="signOut"
       class="btn btn-outline text-white cursor-pointer"
@@ -18,8 +19,8 @@ import { ref, reactive, computed } from "vue";
 import { supabase } from "../supabase";
 import { useRouter } from "vue-router";
 import { useUserStore } from "../store/user";
-const router = useRouter();
 
+const router = useRouter();
 // get user from store
 const user = computed(() => useUserStore().$state.user);
 

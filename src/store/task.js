@@ -20,38 +20,53 @@ export const useTaskStore = defineStore("tasks", {
     },
 
     //create task
-    async addTask(title) {
+    async createTask(name, user) {
+      console.log(user);
       const { data, error } = await supabase.from("tasks").insert([
         {
-          user_id: useUserStore().user.id,
-          title: title,
+          user_id: user.id,
+          title: name,
           is_complete: false,
         },
       ]);
     },
 
-    // mark completed
-    async markCompleted() {
-      const { data, error } = await supabase
-        .from("tasks")
-        .update({ is_completed: "true" })
-        .eq("is_completed", "true");
+    //delete task
+    async deleteTask(item) {
+      try {
+        const { error } = await supabase
+          .from("tasks")
+          .delete()
+          .match({ id: item });
+        // console.log("item deleted");
+        if (error) throw error;
+      } catch (error) {
+        console.log(error);
+      }
     },
 
-    //delete task
-    async deleteTask() {
-      const { data, error } = await supabase
+    // mark completed
+    async isCompleted(boolean, index) {
+      // console.log(boolean);
+      // console.log(index);
+      const { error } = await supabase
         .from("tasks")
-        .delete()
-        .eq("some_column", "someValue");
+        .update({
+          is_complete: boolean,
+        })
+        .match({ id: index });
     },
 
     //edit task
-    async editTask() {
-      const { data, error } = await supabase
+    async updateTask(name, index) {
+      // console.log(name);
+      //  console.log(index);
+      const { error } = await supabase
         .from("tasks")
-        .update({ title: "otherValue" })
-        .eq("title", "someValue");
+        .update({
+          title: name,
+        })
+        .match({ id: index });
     },
   },
 });

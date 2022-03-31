@@ -4,16 +4,33 @@
   >
     <div class="">
       <div>
-        <h1 class="text-2xl font-bold text-accent">Welcome {{ userName }}!</h1>
+        <h1 class="text-2xl font-bold text-accent">
+          Welcome back {{ userName }}!
+        </h1>
       </div>
-      <div>You have 0 task(s) pending</div>
+      <div class="">You have {{ pendingTasks }} task(s) pending.</div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { useUserStore } from "../store/user.js";
+import { ref, reactive } from "vue";
+import { supabase } from "../supabase";
+
 const user = useUserStore();
 const userEmail = useUserStore().user.email;
 const userName = userEmail.split("@")[0];
+
+//count pending tasks function // not working
+
+const pendingTasks = "";
+
+const countTasks = async () => {
+  const { data, count } = await supabase
+    .from("tasks")
+    .select("is_completed", "Equal to false", { count: "exact" });
+  pendingTasks = countTasks();
+};
+console.log(pendingTasks);
 </script>

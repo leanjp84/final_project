@@ -1,4 +1,3 @@
-// text input new task // ok button
 
 <template>
   <!-- new task -->
@@ -39,6 +38,5 @@ const newItem = ref("");
 const newTask = async () => {
   task.createTask(newItem.value, user.user);
   newItem.value = "";
-  // await doTask();
 };
 </script>

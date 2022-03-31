@@ -7,7 +7,7 @@ export const useTaskStore = defineStore("tasks", {
   }),
   actions: {
     async fetchTasks() {
-      const { data: tasks } = await supabase
+      const { data: tasks, error } = await supabase
         .from("tasks")
         .select("*")
         .order("id", { ascending: false });
@@ -19,7 +19,7 @@ export const useTaskStore = defineStore("tasks", {
       this.user = user;
     },
 
-    //create task
+    // create task
     async createTask(name, user) {
       console.log(user);
       const { data, error } = await supabase.from("tasks").insert([
@@ -31,14 +31,14 @@ export const useTaskStore = defineStore("tasks", {
       ]);
     },
 
-    //delete task
+    // delete task
     async deleteTask(item) {
       try {
         const { error } = await supabase
           .from("tasks")
           .delete()
           .match({ id: item });
-        // console.log("item deleted");
+
         if (error) throw error;
       } catch (error) {
         console.log(error);
@@ -47,8 +47,6 @@ export const useTaskStore = defineStore("tasks", {
 
     // mark completed
     async isCompleted(boolean, index) {
-      // console.log(boolean);
-      // console.log(index);
       const { error } = await supabase
         .from("tasks")
         .update({
@@ -59,8 +57,6 @@ export const useTaskStore = defineStore("tasks", {
 
     //edit task
     async updateTask(name, index) {
-      // console.log(name);
-      //  console.log(index);
       const { error } = await supabase
         .from("tasks")
         .update({

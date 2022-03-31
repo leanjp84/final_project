@@ -1,82 +1,102 @@
-// list of tasks // mark as complete // edit button // delete button
-
 <template>
-  <div>
-    <div class="overflow-x-auto">
-      <table class="table w-fit m-4">
-        <thead>
-          <tr>
-            <th class="bg-cyan-500 text-white"><h3>Task</h3></th>
-            <th class="bg-cyan-500 text-white"><h3>Complete</h3></th>
-            <th class="bg-cyan-500 text-white"><h3>Added on</h3></th>
-            <th class="bg-cyan-500 text-white"><h3>Edit</h3></th>
-            <th class="bg-cyan-500 text-white"><h3>Delete</h3></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="task in tasks" :key="task.id" class="hover">
-            <td>{{ supabase.title }}</td>
-            <td>{{ supabase.is_complete }}</td>
-            <td>{{ supabase.from("inserted_at") }}</td>
-            <td>
-              <button class="btn btn-square btn-outline">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </td>
-            <td>
-              <button class="btn btn-circle btn-outline">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M7897.8,4996.3c-262.5-65.1-65.1,124.5-3609.2-3419.6L999.3-1710.6l-454-1367.8c-385.1-1157.1-454-1377.4-444.4-1444.4c17.2-132.2,124.5-239.5,256.7-256.7c67.1-9.6,287.4,59.4,1444.5,444.5l1367.8,454l3252.9,3251C8212,1157.2,9704.3,2662.9,9738.8,2714.7c189.6,285.4,212.6,632.2,65.1,948.3c-51.7,109.2-122.6,189.7-572.8,641.8c-333.3,335.3-553.7,542.1-624.5,584.3C8409.3,5009.7,8127.7,5051.9,7897.8,4996.3z M8265.6,4373.7c105.4-49.8,956-906.1,996.2-1001.9c36.4-90,36.4-170.5-1.9-260.5c-19.2-46-183.9-226.1-463.6-507.7l-434.9-434.9l-655.2,655.2L7049.1,3481l427.2,427.2c247.1,249,457.9,442.5,501.9,463.6C8074.1,4419.7,8166,4419.7,8265.6,4373.7z M7269.5,2379.4l651.3-651.3L5386.3-806.4L2853.7-3339l-969.4-323.8c-532.6-176.2-973.2-318-978.9-312.3c-5.7,5.7,134.1,444.5,310.4,975.1l319.9,963.6L4068.3,498.2c1390.8,1392.7,2534.5,2532.6,2540.2,2532.6S6911.2,2737.7,7269.5,2379.4z"
-                  />
-                </svg>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+  <table class="table w-fit m-4">
+    <thead>
+      <tr>
+        <th class="px-8 py-8 bg-cyan-500 text-white">Task</th>
+        <th class="px-8 py-8 bg-cyan-500 text-white">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="task in allTasks" :key="task">
+        <td class="border px-4 py-2 font-semibold text-1xl">
+          <input
+            v-if="modifyTask"
+            v-model="task.title"
+            class="shadow appearance-none border rounded w-full py-1 px-2 text-accent leading-tight focus:outline-none focus:shadow-outline"
+            id="editTitle"
+            type="text"
+            placeholder="modify your task"
+          />
+          <p v-else class="">{{ task.title }}</p>
+        </td>
+        <!-- edit -->
+        <td class="border px-4 py-1 grid place-content-center">
+          <div class="flex flex-row">
+            <div
+              @click="updateTask()"
+              class="border-2 border-blue-600 rounded-lg px-3 py-2 text-blue-400 cursor-pointer hover:bg-blue-600 hover:text-blue-200"
+            >
+              Edit
+            </div>
+            <!-- mark completed-->
+            <div
+              @click="markComplete(task)"
+              class="border-2 border-green-600 rounded-lg px-3 py-2 text-green-400 cursor-pointer hover:bg-green-600 hover:text-green-200"
+            >
+              Complete
+            </div>
+            <!-- delete-->
+            <div
+              @click="removeTask(task)"
+              class="border-2 border-red-600 rounded-lg px-3 py-2 text-red-400 cursor-pointer hover:bg-red-600 hover:text-red-200"
+            >
+              delete
+            </div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref } from "vue";
 import { supabase } from "../supabase";
 import { useTaskStore } from "../store/task";
 import { useUserStore } from "../store/user";
+import { useRouter } from "vue-router";
+import { onMounted } from "vue";
 
+const newTask = ref("");
+const allTasks = ref([]);
+const errorMsg = ref("");
+const editTask = ref(false);
+const storeTasks = useTaskStore();
+const user = useUserStore();
 
-async function allData(){
+async function fetchAllTasks() {
+  allTasks.value = await storeTasks.fetchTasks().value;
+  console.log(allTasks.value);
+}
+fetchAllTasks();
 
-const { data, error } = await supabase
-  .from('tasks')
-  .select('id', 'title', 'is_completed','inserted_at',);
-  
+async function addTask() {
+  await storeTasks.createTask(newTask.value);
+  await fetchAllTasks();
+  console.log(newTask.value);
+  newTask.value = " ";
 }
 
+///// edit task
+async function modifyTask() {
+  editTask.value = true;
+}
 
+async function saveEdited(item) {
+  await storeTasks.updateTask(item.title, task.id);
+  editTask.value = false;
+  await fetchAllTasks();
+}
 
+async function removeTask(task) {
+  await storeTasks.deleteTask(task.id);
+  await fetchAllTasks();
+}
 
+async function markComplete(task) {
+  item.is_complete = !item.is_complete;
+  console.log(item.is_complete);
+  await storeTasks.isCompleted(item.is_complete, tasl.id);
+  await fetchAllTasks();
+}
 </script>

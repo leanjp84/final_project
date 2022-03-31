@@ -1,4 +1,3 @@
-
 <template>
   <!-- new task -->
   <div
@@ -16,7 +15,7 @@
           class="px-3 py-4 placeholder-blueGray-300 text-blueGray-600 relative bg-white rounded text-base border-0 shadow outline-none focus:outline-none focus:ring w-full"
         />
         <button
-          @click.prevent="newTask"
+          @click="newTask"
           class="px-4 w-64 placeholder:rounded bg-primary text-white font-bold p-4 rounded uppercase border-white hover:bg-secondary hover:drop-shadow-xl"
         >
           add task

@@ -30,7 +30,7 @@ const countTasks = async () => {
   const { data, count } = await supabase
     .from("tasks")
     .select("is_completed", "Equal to false", { count: "exact" });
-  pendingTasks = countTasks();
+  pendingTasks = countTasks().value;
 };
 console.log(pendingTasks);
 </script>

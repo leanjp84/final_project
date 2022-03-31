@@ -1,102 +1,201 @@
 <template>
-  <table class="table w-fit m-4">
-    <thead>
-      <tr>
-        <th class="px-8 py-8 bg-cyan-500 text-white">Task</th>
-        <th class="px-8 py-8 bg-cyan-500 text-white">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="task in allTasks" :key="task">
-        <td class="border px-4 py-2 font-semibold text-1xl">
-          <input
-            v-if="modifyTask"
-            v-model="task.title"
-            class="shadow appearance-none border rounded w-full py-1 px-2 text-accent leading-tight focus:outline-none focus:shadow-outline"
-            id="editTitle"
-            type="text"
-            placeholder="modify your task"
-          />
-          <p v-else class="">{{ task.title }}</p>
-        </td>
-        <!-- edit -->
-        <td class="border px-4 py-1 grid place-content-center">
-          <div class="flex flex-row">
+  <div class="flex flex-col">
+    <table
+      class="table table-bordered mt-5 shadow-lg rounded-md table-fixed m-6 p-2"
+    >
+      <thead>
+        <tr>
+          <th class="px-8 py-8 bg-cyan-500 text-white">Task</th>
+          <th class="px-8 py-8 bg-cyan-500 text-white">Status</th>
+          <th class="px-8 py-8 bg-cyan-500 text-white">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(task, index) in pendingTasks" :key="index">
+          <td>
+            {{ task.title }}
+          </td>
+          <td>Pending</td>
+          <td class="flex flex-row justify-center items-center">
             <div
-              @click="updateTask()"
-              class="border-2 border-blue-600 rounded-lg px-3 py-2 text-blue-400 cursor-pointer hover:bg-blue-600 hover:text-blue-200"
+              @click.prevent="editButton()"
+              class="w-16 border-2 border-blue-600 rounded-lg px-3 py-2 text-blue-400 cursor-pointer hover:bg-blue-600 hover:text-blue-200"
             >
-              Edit
+              EDIT
             </div>
-            <!-- mark completed-->
             <div
-              @click="markComplete(task)"
-              class="border-2 border-green-600 rounded-lg px-3 py-2 text-green-400 cursor-pointer hover:bg-green-600 hover:text-green-200"
+              @click.prevent="changeStatus(task)"
+              class="w-16 border-2 border-green-600 rounded-lg px-3 py-2 text-green-400 cursor-pointer hover:bg-green-600 hover:text-green-200"
             >
-              Complete
+              COMPLETE
             </div>
-            <!-- delete-->
+
             <div
-              @click="removeTask(task)"
-              class="border-2 border-red-600 rounded-lg px-3 py-2 text-red-400 cursor-pointer hover:bg-red-600 hover:text-red-200"
+              @click.prevent="deleteTask(task)"
+              class="w-16 border-2 border-red-600 rounded-lg px-3 py-2 text-red-400 cursor-pointer hover:bg-red-600 hover:text-red-200"
             >
-              delete
+              DELETE
             </div>
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div>
+      <br />
+      <table
+        class="table table-bordered mt-5 shadow-lg rounded-md table-fixed m-6 p-2"
+      >
+        <thead>
+          <tr>
+            <th class="px-8 py-8 bg-purple-900 text-white">Task</th>
+            <th class="px-8 py-8 bg-purple-900 text-white">Status</th>
+            <th class="px-8 py-8 bg-purple-900 text-white">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(task, index) in completedTasks" :key="index">
+            <td>
+              {{ task.title }}
+            </td>
+            <td>Completed</td>
+            <td class="flex flex-row justify-center items-center">
+              <div
+                @click.prevent="editButton()"
+                class="w-16 border-2 border-blue-600 rounded-lg px-3 py-2 text-blue-400 cursor-pointer hover:bg-blue-600 hover:text-blue-200"
+              >
+                EDIT
+              </div>
+
+              <div
+                @click.prevent="changeStatus"
+                class="w-16 border-2 border-purple-600 rounded-lg px-3 py-2 text-purple-400 cursor-pointer hover:bg-purple-600 hover:text-purple-200"
+              >
+                UPDATE
+              </div>
+
+              <div
+                @click.prevent="deleteTask(task)"
+                class="w-16 border-2 border-red-600 rounded-lg px-3 py-2 text-red-400 cursor-pointer hover:bg-red-600 hover:text-red-200"
+              >
+                DELETE
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </template>
 
-<script setup>
-import { ref } from "vue";
+<script>
 import { supabase } from "../supabase";
-import { useTaskStore } from "../store/task";
-import { useUserStore } from "../store/user";
-import { useRouter } from "vue-router";
-import { onMounted } from "vue";
 
-const newTask = ref("");
-const allTasks = ref([]);
-const errorMsg = ref("");
-const editTask = ref(false);
-const storeTasks = useTaskStore();
-const user = useUserStore();
+export default {
+  name: "TaskItem",
+  data() {
+    return {
+      task: "",
+      editedTask: null,
+      availableStatuses: ["To-do", "Donete"],
+      userId: "",
+      tasks: [],
+      pendingTasks: [],
+      completedTasks: [],
+      todoTask: [],
+      editing: false,
+      taskId: null,
+    };
+  },
+  mounted() {
+    this.sortTasks();
+    this.getAllTasks();
+    this.getUserId();
+  },
+  methods: {
+    async submitButton() {
+      if (this.editing === false) {
+        await this.submitTask();
+      } else {
+        await this.editTask();
+        this.editing = false;
+        this.task = "";
+      }
+    },
+    async editTask() {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update({ title: this.task })
+        .match({ id: this.taskId });
+      this.getAllTasks();
+    },
+    async submitTask() {
+      if (this.task.length === 0) return;
+      const myId = this.getUserId();
+      try {
+        const { data, error } = await supabase
+          .from("tasks")
+          .insert([{ title: this.task, user_id: myId }]);
+        if (error) throw error;
+        this.task = "";
+        this.getAllTasks();
+      } catch (error) {
+        console.log(error);
+      }
+    },
 
-async function fetchAllTasks() {
-  allTasks.value = await storeTasks.fetchTasks().value;
-  console.log(allTasks.value);
-}
-fetchAllTasks();
+    async deleteTask(task) {
+      const myId = task.id;
+      const { data, error } = await supabase
+        .from("tasks")
+        .delete()
+        .match({ id: myId });
+      await this.getAllTasks();
+    },
 
-async function addTask() {
-  await storeTasks.createTask(newTask.value);
-  await fetchAllTasks();
-  console.log(newTask.value);
-  newTask.value = " ";
-}
+    async getAllTasks() {
+      const { data: databaseTasks } = await supabase
+        .from("tasks")
+        .select("*")
+        .order("id", { ascending: false });
+      this.tasks = databaseTasks;
+      this.sortTasks();
+    },
 
-///// edit task
-async function modifyTask() {
-  editTask.value = true;
-}
+    sortTasks() {
+      this.pendingTasks = [];
+      this.completedTasks = [];
+      this.tasks.forEach((task) => {
+        if (task.is_complete === false) {
+          this.pendingTasks.push(task);
+        } else {
+          this.completedTasks.push(task);
+        }
+      });
+    },
 
-async function saveEdited(item) {
-  await storeTasks.updateTask(item.title, task.id);
-  editTask.value = false;
-  await fetchAllTasks();
-}
+    async editButton(value) {
+      this.editing = true;
+      this.task = value.title;
+      this.taskId = value.id;
+    },
 
-async function removeTask(task) {
-  await storeTasks.deleteTask(task.id);
-  await fetchAllTasks();
-}
+    changeStatus(task) {
+      let myIndex = this.tasks.indexOf(task);
+      if (this.tasks[myIndex].is_complete === false) {
+        this.tasks[myIndex].is_complete = true;
+      } else {
+        this.tasks[myIndex].is_complete = false;
+      }
+      this.sortTasks();
+    },
 
-async function markComplete(task) {
-  item.is_complete = !item.is_complete;
-  console.log(item.is_complete);
-  await storeTasks.isCompleted(item.is_complete, tasl.id);
-  await fetchAllTasks();
-}
+    getUserId() {
+      const data = localStorage.getItem("supabase.auth.token");
+      const session = JSON.parse(data);
+      const userId = session.currentSession.user.id;
+      this.userId = userId;
+      return userId;
+    },
+  },
+};
 </script>

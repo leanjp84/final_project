@@ -8,4 +8,5 @@ We’re going to build a simple To-do app with Vue.js that allows users to creat
 
 ## Live Version
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/cef34ecb-e06f-4f15-87ef-81df3a952140/deploy-status)](https://app.netlify.com/sites/final-project-leanjp84/deploys)
 https://final-project-leanjp84.netlify.app/

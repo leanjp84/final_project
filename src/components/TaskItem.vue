@@ -15,14 +15,15 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(task, index) in pendingTasks" :key="index">
+        <tr v-for="(task, index) in allTasks" :key="index">
           <td class="text-lg">
             {{ task.title }}
           </td>
+
           <td class="flex flex-row justify-center">
             <button
-              @click.prevent="editButton()"
-              class="w-16 border-2 border-blue-600 rounded-lg px-4 py-1 m-2 text-blue-400 cursor-pointer hover:bg-blue-600 hover:text-blue-200"
+              @click.prevent="updateTask()"
+              class="w-16 border-2 border-indigo-5000 rounded-lg px-4 py-1 m-2 text-indigo-500 cursor-pointer hover:bg-indigo-700 hover:text-indigo-300"
             >
               <!--edit icon -->
               <svg
@@ -41,7 +42,7 @@
               </svg>
             </button>
             <button
-              @click.prevent="changeStatus(task)"
+              @click.prevent="completeTask(task)"
               class="w-16 border-2 border-green-600 rounded-lg px-4 py-1 m-2 text-green-400 cursor-pointer hover:bg-green-600 hover:text-green-200"
             >
               <!--complete icon -->
@@ -103,10 +104,11 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(task, index) in completedTasks" :key="index">
+          <tr v-for="(task, index) in allTasks" :key="index">
             <td class="text-lg">
               {{ task.title }}
             </td>
+
             <td class="flex flex-row justify-center">
               <button
                 @click.prevent="editButton()"
@@ -130,7 +132,7 @@
               </button>
               <br />
               <button
-                @click.prevent="changeStatus"
+                @click.prevent="completeTask(task)"
                 class="w-16 border-2 border-purple-600 rounded-lg px-4 py-2 m-2 text-purple-400 cursor-pointer hover:bg-purple-600 hover:text-purple-200"
               >
                 <!--update icon -->
@@ -178,115 +180,63 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { supabase } from "../supabase";
+import { useTaskStore } from "../store/task.js";
+import { useUserStore } from "../store/user.js";
+import { ref, onMounted, computed } from "vue";
 
-export default {
-  name: "TaskItem",
-  data() {
-    return {
-      task: "",
-      editedTask: null,
-      availableStatus: ["To-do", "Done"],
-      userId: "",
-      tasks: [],
-      pendingTasks: [],
-      completedTasks: [],
-      todoTask: [],
-      editing: false,
-      taskId: null,
-    };
-  },
-  mounted() {
-    this.sortTasks();
-    this.getAllTasks();
-    this.getUserId();
-  },
-  methods: {
-    async submitButton() {
-      if (this.editing === false) {
-        await this.submitTask();
-      } else {
-        await this.editTask();
-        this.editing = false;
-        this.task = "";
-      }
-    },
-    async editTask() {
-      const { data, error } = await supabase
-        .from("tasks")
-        .update({ title: this.task })
-        .match({ id: this.taskId });
-      this.getAllTasks();
-    },
-    async submitTask() {
-      if (this.task.length === 0) return;
-      const myId = this.getUserId();
-      try {
-        const { data, error } = await supabase
-          .from("tasks")
-          .insert([{ title: this.task, user_id: myId }]);
-        if (error) throw error;
-        this.task = "";
-        this.getAllTasks();
-      } catch (error) {
-        console.log(error);
-      }
-    },
+const task = useTaskStore();
+const user = useUserStore();
+const allTasks = [];
+const isCompleted = [];
+const pendingTasks = [];
+const completedTasks = [];
 
-    async deleteTask(task) {
-      const myId = task.id;
-      const { data, error } = await supabase
-        .from("tasks")
-        .delete()
-        .match({ id: myId });
-      await this.getAllTasks();
-    },
+async function getAllTasks(tasks) {
+  const { data: allTasks } = await supabase
+    .from("tasks")
+    .select("*")
+    .order("id", { ascending: false });
+  console.log(allTasks);
+}
+getAllTasks();
 
-    async getAllTasks() {
-      const { data: databaseTasks } = await supabase
-        .from("tasks")
-        .select("*")
-        .order("id", { ascending: false });
-      this.tasks = databaseTasks;
-      this.sortTasks();
-    },
+function filterTasks() {
+  allTasks.filter((task) => {
+    if (task.is_complete === false) {
+      pendingTasks.push(task);
+    } else {
+      completedTasks.push(task);
+    }
+    console.log(pendingTasks);
+  });
+}
+filterTasks();
 
-    sortTasks() {
-      this.pendingTasks = [];
-      this.completedTasks = [];
-      this.tasks.forEach((task) => {
-        if (task.is_complete === false) {
-          this.pendingTasks.push(task);
-        } else {
-          this.completedTasks.push(task);
-        }
-      });
-    },
+async function deleteTask(task) {
+  const myId = task.id;
+  const { data, error } = await supabase
+    .from("tasks")
+    .delete()
+    .match({ id: myId });
+  await this.getAllTasks();
+}
 
-    async editButton(value) {
-      this.editing = true;
-      this.task = value.title;
-      this.taskId = value.id;
-    },
+/* function markCompleted(task) {
+  let myIndex = this.tasks.indexOf(task);
+  if (task[myIndex].is_complete === false) {
+    task[myIndex].is_complete = true;
+  } else {
+    task[myIndex].is_complete = false;
+  }
+  sortTasks();
+} */
 
-    changeStatus(task) {
-      let myIndex = this.tasks.indexOf(task);
-      if (this.tasks[myIndex].is_complete === false) {
-        this.tasks[myIndex].is_complete = true;
-      } else {
-        this.tasks[myIndex].is_complete = false;
-      }
-      this.sortTasks();
-    },
-
-    getUserId() {
-      const data = localStorage.getItem("supabase.auth.token");
-      const session = JSON.parse(data);
-      const userId = session.currentSession.user.id;
-      this.userId = userId;
-      return userId;
-    },
-  },
-};
+function getUserId() {
+  const data = localStorage.getItem("supabase.auth.token");
+  const session = JSON.parse(data);
+  const userId = session.currentSession.user.id;
+}
+getUserId();
 </script>
